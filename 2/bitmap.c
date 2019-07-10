@@ -273,8 +273,8 @@ void Template_Matching(Image *img, Image *templat, Image *nccim)
 {
   int i, j;
   int ti, tj;
-  unsigned int index, tindex, nindex, tn, in, inpro;
-  double imgpx, templatepx, color;
+  unsigned int index, tindex, nindex;
+  double imgpx, templatepx, color, tn, in, inpro;
 
   for(i=0; i<nccim->height; i++) {
     for(j=0; j<nccim->width; j++) {
@@ -288,25 +288,25 @@ void Template_Matching(Image *img, Image *templat, Image *nccim)
           tindex = ti*templat->width + tj;
           templatepx = templat->data[tindex].r;
 
-//          index = (i+ti)*img->width + j + tj - (templat->width - 1);
-          index =  (i+ti-templat->height/2)*img->width+j+tj-templat->width/2;
+          index = (i+ti-templat->height)*img->width + j + tj - (templat->width - 1);
+//          index =  (i+ti-templat->height/2)*img->width+j+tj-templat->width/2;
           if(0<=index && index<img->width*img->height) {
             imgpx = img->data[index].r;
           } else {
 //            printf("i:%d, ti:%d, j:%d, tj: %d, index:%d", i, ti, j, tj, index);
+//            continue;
             imgpx = 0;
           }
 //
+          in += pow(imgpx, 2);
+          tn += pow(templatepx, 2);
           inpro +=  imgpx * templatepx;
-          in += pow(imgpx, 2.0);
-          tn += pow(templatepx, 2.0);
         }
       }
 
       color = (inpro / sqrt(in * tn)-0.9)*10*255;
 //      color = 1;
-      nccim->data[nindex].r =
-      nccim->data[nindex].g = nccim->data[nindex].b = color;
+      nccim->data[nindex].r = nccim->data[nindex].g = nccim->data[nindex].b = (int)color;
     }
   }
 }
@@ -336,7 +336,7 @@ void NCC(Image *temp, Image *img, Image *out)
         }
       }
       ncc[i][j] = sumit/sqrt(sumi*sumt);
-      //printf("%d", ncc[i][j]);
+      printf("%d", ncc[i][j]);
       color = (ncc[i][j]-0.9)*10*255;
       out->data[index].r = out->data[index].g = out->data[index].b = (int)color;
       if(ncc[i][j] > maxncc){
