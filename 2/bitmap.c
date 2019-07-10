@@ -273,40 +273,84 @@ void Template_Matching(Image *img, Image *templat, Image *nccim)
 {
   int i, j;
   int ti, tj;
-  unsigned int index, tindex, nindex;
-  unsigned char imgpx, templatepx, color;
-  unsigned char inpro, norm;
+  unsigned int index, tindex, nindex, tn, in, inpro;
+  double imgpx, templatepx, color;
 
   for(i=0; i<nccim->height; i++) {
     for(j=0; j<nccim->width; j++) {
       nindex = i*nccim->width + j;
       inpro = 0;
-      norm = 0;
+      in = 0;
+      tn = 0;
 
       for(ti=0; ti < templat->height; ti++) {
         for (tj = 0; tj < templat->width; tj++) {
           tindex = ti*templat->width + tj;
           templatepx = templat->data[tindex].r;
 
-//          if(0 > j+tj-(templat->width - 1) || (i + ti) > (img->height - 3)) {
-          index = (i+ti)*img->width + j + tj - (templat->width - 1);
-          if(0<index && index<(img->width*img->height-1)) {
+//          index = (i+ti)*img->width + j + tj - (templat->width - 1);
+          index =  (i+ti-templat->height/2)*img->width+j+tj-templat->width/2;
+          if(0<=index && index<img->width*img->height) {
             imgpx = img->data[index].r;
           } else {
-            imgpx = 1;
+//            printf("i:%d, ti:%d, j:%d, tj: %d, index:%d", i, ti, j, tj, index);
+            imgpx = 0;
           }
 //
-          inpro = inpro + imgpx * templatepx;
-          norm = norm + imgpx*imgpx + templatepx*templatepx;
+          inpro +=  imgpx * templatepx;
+          in += pow(imgpx, 2.0);
+          tn += pow(templatepx, 2.0);
         }
       }
 
-      color = inpro / sqrt(norm);
+      color = (inpro / sqrt(in * tn)-0.9)*10*255;
 //      color = 1;
-//      printf("%d", color);
       nccim->data[nindex].r =
       nccim->data[nindex].g = nccim->data[nindex].b = color;
     }
   }
 }
 
+void NCC(Image *temp, Image *img, Image *out)
+{
+  int i, j, k, l;
+  unsigned int index, index1, index2;
+  double color;
+  double sumt, sumi, sumit;
+  double ncc[out->height][out->width];
+  double maxncc = 0;
+  for(i = 0; i < out->height; i++){
+    for(j = 0; j < out->width; j++){
+      sumi = 0, sumt = 0, sumit = 0;
+      index = i*out->width+j;
+      for(k = 0; k < temp->height; k++){
+        for(l = 0; l < temp->width; l++){
+          index1 = (i+k-temp->height/2)*img->width+j+l-temp->width/2;
+          index2 = k*temp->width+l;
+          if(index1 < 0 || index1 >= img->height*img->width){
+            continue;
+          }
+          sumt += pow(temp->data[index2].r, 2);
+          sumi += pow(img->data[index1].r, 2);
+          sumit += img->data[index1].r*temp->data[index2].r;
+        }
+      }
+      ncc[i][j] = sumit/sqrt(sumi*sumt);
+      //printf("%d", ncc[i][j]);
+      color = (ncc[i][j]-0.9)*10*255;
+      out->data[index].r = out->data[index].g = out->data[index].b = (int)color;
+      if(ncc[i][j] > maxncc){
+        maxncc = ncc[i][j];
+      }
+    }
+  }
+  for(i = 0; i < out->height; i++){
+    for(j = 0; j < out->width; j++){
+      if(ncc[i][j] == maxncc){
+        index = i*out->width+j;
+        out->data[index].r = 255;
+        out->data[index].g = out->data[index].b = 0;
+      }
+    }
+  }
+}

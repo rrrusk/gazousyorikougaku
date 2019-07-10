@@ -41,6 +41,7 @@ void Mirror(Image *img);
 void Put(Image *img);
 
 void Template_Matching(Image *img, Image *templat, Image *nccim);
+void NCC(Image *temp, Image *img, Image *out);
 //void NCC(Image *temp, Image *img);
 #endif /*__BITMAP_H_INCLUDED__*/
 

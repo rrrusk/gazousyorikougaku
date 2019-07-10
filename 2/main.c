@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 
   printf("%d\n", colorimg->width);
   Template_Matching(colorimg, template, nccimg);
+//  NCC(template, colorimg, nccimg);
 	if(Write_Bmp("img/out.bmp", nccimg)){
 		exit(1);
 	}
