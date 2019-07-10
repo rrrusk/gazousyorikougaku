@@ -290,14 +290,19 @@ void Template_Matching(Image *img, Image *templat, Image *nccim)
 
           index = (i+ti-templat->height)*img->width + j + tj - (templat->width - 1);
 //          index =  (i+ti-templat->height/2)*img->width+j+tj-templat->width/2;
-          if(0<=index && index<img->width*img->height) {
-            imgpx = img->data[index].r;
-          } else {
+//          if(0<=index && index<img->width*img->height) {
+//            imgpx = img->data[index].r;
+//          } else {
 //            printf("i:%d, ti:%d, j:%d, tj: %d, index:%d", i, ti, j, tj, index);
 //            continue;
-            imgpx = 0;
-          }
+//          }
 //
+          if (i+ti-templat->height > 0 & i+ti-templat->height < img->height &
+            j + tj - (templat->width - 1) > 0 & j + tj - (templat->width - 1) < img->width ) {
+            imgpx = img->data[index].r;
+          } else {
+            continue;
+          }
           in += pow(imgpx, 2);
           tn += pow(templatepx, 2);
           inpro +=  imgpx * templatepx;
